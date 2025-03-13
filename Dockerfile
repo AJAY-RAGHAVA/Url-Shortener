@@ -23,4 +23,4 @@ RUN ./gradlew build -x test
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java","-jar","build/libs/gradle-wrapper.jar"]
+ENTRYPOINT ["java","-jar","build/libs/UrlShortener-0.0.1-SNAPSHOT.jar"]

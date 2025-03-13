@@ -26,7 +26,7 @@ import java.util.Optional;
 @CrossOrigin("*")
 public class UrlShortenerController {
 
-    private static final String BASE_URL = "https://url-shortener-532664316579.us-central1.run.app";
+    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
     // private static final String BASE_URL = "http://localhost:8080/";"
 
     private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);

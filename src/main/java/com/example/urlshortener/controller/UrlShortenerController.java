@@ -1,24 +1,23 @@
 package com.example.urlshortener.controller;
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
-import com.example.urlshortener.model.BulkShortUrlResponse;
-import com.example.urlshortener.model.OriginalUrlRequest;
-import com.example.urlshortener.model.ShortenedUrl;
-import com.example.urlshortener.model.UrlHit;
+import com.example.urlshortener.model.*;
 import com.example.urlshortener.repository.ShortenedUrlRepository;
 import com.example.urlshortener.repository.UrlHitRepository;
-import com.google.api.gax.rpc.internal.Headers;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.http.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.function.ServerRequest;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,9 +25,12 @@ import java.util.Optional;
 @CrossOrigin("*")
 public class UrlShortenerController {
 
-    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/"; // Your domain name
+    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
+    // private static final String BASE_URL = "http://localhost:8080/";"
 
     private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
+
+//    private static final String BASE_URL = "http://your-domain.com/"; //Ensure you replace "http://your-domain.com/" with your actual domain or base URL.
 
     @Autowired
     private ShortenedUrlRepository shortenedUrlRepository;
@@ -44,12 +46,103 @@ public class UrlShortenerController {
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
+    public ResponseEntity<?> shortenUrl(@RequestBody OriginalUrlRequest request, HttpServletRequest requests) {
+
+        String originalUrl = request.getOriginalUrl();
+        String senderAccountNumber = request.getSenderAccountNumber();
+
+        // Check if a matching ShortenedUrl already exists
+        Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
+
+        if (existingEntry.isPresent()) {
+            // Return existing short URL
+            return ResponseEntity.ok(new ShortUrlResponse(existingEntry.get().getShortUrl()));
+        }
+
+        // Generate new short ID
+        String shortId = sanitizeInput(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6));
+        String shortUrl = BASE_URL + shortId;
+
+        // Create and save new ShortenedUrl
+        ShortenedUrl newEntry = new ShortenedUrl();
+        newEntry.setShortUrl(shortUrl);
+        newEntry.setOriginalUrl(originalUrl);
+        newEntry.setCreatedDateTime(LocalDateTime.now());
+        newEntry.setSenderAccountNumber(senderAccountNumber);
+
+        shortenedUrlRepository.save(newEntry);
+
+        return ResponseEntity.ok(new ShortUrlResponse(shortUrl));
+    }
+
+    /*@PostMapping("/shorten/bulk")
+    public ResponseEntity<?> bulkShortenUrl(@RequestBody List<OriginalUrlRequest> requests, HttpServletRequest servletRequest) {
+        List<BulkShortUrlResponse> responses = new ArrayList<>();
+
+        String baseUrl = servletRequest.getScheme() + "://" + servletRequest.getServerName();
+
+        int serverPort = servletRequest.getServerPort();
+        if (serverPort != 80 && serverPort != 443) {
+            baseUrl += ":" + serverPort;
+        }
+        baseUrl += "/";
+
+        for (OriginalUrlRequest request : requests) {
+            BulkShortUrlResponse responseItem = new BulkShortUrlResponse();
+            responseItem.setOriginalUrl(request.getOriginalUrl());
+            responseItem.setSenderAccountNumber(request.getSenderAccountNumber());
+
+            try {
+                String originalUrl = request.getOriginalUrl();
+                String senderAccountNumber = request.getSenderAccountNumber();
+
+                // Validate the original URL and sender account number
+                if (originalUrl == null || originalUrl.isEmpty() || senderAccountNumber == null || senderAccountNumber.isEmpty()) {
+                    throw new IllegalArgumentException("Original URL and sender account number cannot be blank");
+                }
+
+                // Check if a matching ShortenedUrl already exists
+                Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
+
+                String shortUrl;
+
+                if (existingEntry.isPresent()) {
+                    // Use existing short URL
+                    shortUrl = existingEntry.get().getShortUrl();
+                } else {
+                    // Generate new short ID
+                    String shortId = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6);
+                    shortUrl = baseUrl + shortId;
+
+                    // Create and save new ShortenedUrl
+                    ShortenedUrl newEntry = new ShortenedUrl();
+                    newEntry.setShortUrl(shortUrl);
+                    newEntry.setOriginalUrl(originalUrl);
+                    newEntry.setCreatedDateTime(LocalDateTime.now());
+                    newEntry.setSenderAccountNumber(senderAccountNumber);
+
+                    shortenedUrlRepository.save(newEntry);
+                }
+
+                responseItem.setShortUrl(shortUrl);
+            } catch (Exception e) {
+                responseItem.setShortUrl(null);
+                throw new IllegalArgumentException(e.getMessage());
+            }
+
+            responses.add(responseItem);
+        }
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @PostMapping("/shorten")
+    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests, HttpServletRequest servletRequest) {
         List<BulkShortUrlResponse> responses = new ArrayList<>();
 
         for (OriginalUrlRequest request : requests) {
             String originalUrl = request.getOriginalUrl();
-            String senderAccountNumber = sanitizeInput(request.getSenderAccountNumber());
+            String senderAccountNumber = request.getSenderAccountNumber();
 
             // Check if a matching ShortenedUrl already exists
             Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
@@ -84,16 +177,13 @@ public class UrlShortenerController {
         }
 
         return ResponseEntity.ok(responses.size() == 1 ? responses.get(0) : responses);
-    }
+    }*/
 
     @GetMapping("/{shortId}")
-    public ResponseEntity<?> redirect(@RequestHeader Headers headers, @PathVariable String shortId, HttpServletRequest request) {
+    public ResponseEntity<?> redirect(@RequestHeader Header headers, @PathVariable String shortId, HttpServletRequest request) {
         String shortUrl = BASE_URL + shortId;
 
         Optional<ShortenedUrl> optionalEntry = shortenedUrlRepository.findByShortUrl(shortUrl);
-
-        logger.info("The headers are: {}", headers);
-        logRequestHeaders(request);
 
         if (optionalEntry.isPresent()) {
             ShortenedUrl urlEntry = optionalEntry.get();
@@ -107,6 +197,7 @@ public class UrlShortenerController {
             hit.setAccountNumber(urlEntry.getSenderAccountNumber());
 
             urlHitRepository.save(hit);
+            logger.info("The Header values are: \n",request);
 
             return ResponseEntity.status(302)
                     .header("Location", urlEntry.getOriginalUrl())
@@ -122,6 +213,8 @@ public class UrlShortenerController {
         List<UrlHit> hits = urlHitRepository.findByShortUrl(shortUrl);
         return ResponseEntity.ok(hits);
     }
+
+
 
     private String getClientIpAddress(HttpServletRequest request) {
         String ipAddress = request.getHeader("X-Forwarded-For");
@@ -150,12 +243,30 @@ public class UrlShortenerController {
         }
     }
 
-    private void logRequestHeaders(HttpServletRequest request) {
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while(headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            String headerValue = request.getHeader(headerName);
-            logger.info("{}: {}", headerName, headerValue);
+    private String getLocationFromIp(String ipAddress) {
+        String apiUrl = "https://ip-api.com/json/" + ipAddress;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String response = restTemplate.getForObject(apiUrl, String.class);
+            // Parse JSON and extract location fields
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response);
+            String status = root.path("status").asText();
+            if ("success".equalsIgnoreCase(status)) {
+                String city = root.path("city").asText("");
+                String country = root.path("country").asText("");
+                String regionName = root.path("regionName").asText("");
+                return city + ", " + regionName + ", " + country;
+            } else {
+                String message = root.path("message").asText("Unknown error");
+                System.err.println("Geolocation API error: " + message);
+                return "Unknown";
+            }
+        } catch (Exception e) {
+            System.err.println("Error in getLocationFromIp: " + e.getMessage());
+            return "Unknown";
         }
     }
+
+
 }

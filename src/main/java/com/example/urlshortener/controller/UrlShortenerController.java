@@ -38,12 +38,12 @@ public class UrlShortenerController {
     @Autowired
     private UrlHitRepository urlHitRepository;
 
-    private String sanitizeInput(String input) {
+    /*private String sanitizeInput(String input) {
         if (input == null) {
             return "";
         }
         return input.replaceAll("[\n\r\t]", "");
-    }
+    }*/
 
     @PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody OriginalUrlRequest request, HttpServletRequest requests) {
@@ -60,7 +60,7 @@ public class UrlShortenerController {
         }
 
         // Generate new short ID
-        String shortId = sanitizeInput(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6));
+        String shortId = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6);
         String shortUrl = BASE_URL + shortId;
 
         // Create and save new ShortenedUrl

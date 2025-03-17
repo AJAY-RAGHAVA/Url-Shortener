@@ -45,7 +45,7 @@ public class UrlShortenerController {
         return input.replaceAll("[\n\r\t]", "");
     }
 
-    @PostMapping("/shorten")
+    /*@PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody OriginalUrlRequest request, HttpServletRequest requests) {
 
         String originalUrl = request.getOriginalUrl();
@@ -134,6 +134,49 @@ public class UrlShortenerController {
         }
 
         return ResponseEntity.ok(responses);
+    }*/
+    
+    @PostMapping("/shorten")
+    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests, HttpServletRequest servletRequest) {
+        List<BulkShortUrlResponse> responses = new ArrayList<>();
+
+        for (OriginalUrlRequest request : requests) {
+            String originalUrl = request.getOriginalUrl();
+            String senderAccountNumber = request.getSenderAccountNumber();
+
+            // Check if a matching ShortenedUrl already exists
+            Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
+
+            String shortUrl;
+
+            if (existingEntry.isPresent()) {
+                // Use existing short URL
+                shortUrl = existingEntry.get().getShortUrl();
+            } else {
+                // Generate new short ID
+                String shortId = sanitizeInput(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6));
+                shortUrl = BASE_URL + shortId;
+
+                // Create and save new ShortenedUrl
+                ShortenedUrl newEntry = new ShortenedUrl();
+                newEntry.setShortUrl(shortUrl);
+                newEntry.setOriginalUrl(originalUrl);
+                newEntry.setCreatedDateTime(LocalDateTime.now());
+                newEntry.setSenderAccountNumber(senderAccountNumber);
+
+                shortenedUrlRepository.save(newEntry);
+            }
+
+            // Create response item
+            BulkShortUrlResponse responseItem = new BulkShortUrlResponse();
+            responseItem.setOriginalUrl(originalUrl);
+            responseItem.setSenderAccountNumber(senderAccountNumber);
+            responseItem.setShortUrl(shortUrl);
+
+            responses.add(responseItem);
+        }
+
+        return ResponseEntity.ok(responses.size() == 1 ? responses.get(0) : responses);
     }
 
     @GetMapping("/{shortId}")

@@ -4,17 +4,19 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+
 @Entity
-@Table(name = "shortened_urls")
+@Table(name = "shortened_urls", uniqueConstraints = @UniqueConstraint(columnNames = {"original_url", "sender_account_number"}))
 public class ShortenedUrl {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "primary_id")
+    private Long primaryId;
 
-    @Column(name = "short_id", nullable = false, unique = true)
-    private String shortId;
+    @Column(name = "short_url", nullable = false, unique = true)
+    private String shortUrl;
 
-    @Column(name = "original_url", nullable = false)
+    @Column(name = "original_url", columnDefinition = "TEXT", nullable = false)
     private String originalUrl;
 
     @Column(name = "created_date_time", nullable = false)
@@ -23,13 +25,15 @@ public class ShortenedUrl {
     @Column(name = "sender_account_number", nullable = false)
     private String senderAccountNumber;
 
+    // Constructors, getters, setters
+
     // Constructors
     public ShortenedUrl() {
     }
 
-    public ShortenedUrl(long primaryId, String getShortId, String originalUrl, LocalDateTime createdDateTime, String senderAccountNumber) {
-        this.id = primaryId;
-        this.shortId = getShortId;
+    public ShortenedUrl(long primaryId, String shortUrl, String originalUrl, LocalDateTime createdDateTime, String senderAccountNumber) {
+        this.primaryId = primaryId;
+        this.shortUrl = shortUrl;
         this.originalUrl = originalUrl;
         this.createdDateTime = createdDateTime;
         this.senderAccountNumber = senderAccountNumber;
@@ -37,19 +41,19 @@ public class ShortenedUrl {
 
     // Getters and Setters
     public long getPrimaryId() {
-        return id;
+        return primaryId;
     }
 
     public void setPrimaryId(long primaryId) {
-        this.id = primaryId;
+        this.primaryId = primaryId;
     }
 
-    public String getShortId() {
-        return shortId;
+    public String getShortUrl() {
+        return shortUrl;
     }
 
-    public void setShortId(String shortUrl) {
-        this.shortId = shortUrl;
+    public void setShortUrl(String shortUrl) {
+        this.shortUrl = shortUrl;
     }
 
     public String getOriginalUrl() {

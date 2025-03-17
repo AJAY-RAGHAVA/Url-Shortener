@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +27,7 @@ import java.util.Optional;
 @CrossOrigin("*")
 public class UrlShortenerController {
 
-    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app ";
+    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
 
     private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
 
@@ -38,7 +39,14 @@ public class UrlShortenerController {
     @Autowired
     private UrlHitRepository urlHitRepository;
 
-    @PostMapping("/shorten")
+    private String sanitizeInput(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replaceAll("[\n\r\t]", "");
+    }
+
+    /*@PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody OriginalUrlRequest request) {
         String originalUrl = request.getOriginalUrl();
         String senderAccountNumber = request.getSenderAccountNumber();
@@ -65,7 +73,45 @@ public class UrlShortenerController {
         shortenedUrlRepository.save(newEntry);
 
         return ResponseEntity.ok(new ShortUrlResponse(shortUrl));
+    }*/
+
+    @PostMapping("/shorten")
+    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
+        List<ShortUrlResponse> responses = new ArrayList<>();
+        for (OriginalUrlRequest request : requests) {
+            String originalUrl = request.getOriginalUrl();
+            String senderAccountNumber = request.getSenderAccountNumber();
+
+            // Check if a matching ShortenedUrl already exists
+            Optional<ShortenedUrl> existingEntry =
+                    shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
+
+            String shortUrl;
+
+            if (existingEntry.isPresent()) {
+                // Use existing short URL
+                shortUrl = existingEntry.get().getShortUrl();
+            } else {
+                // Generate new short ID
+                String shortId = sanitizeInput(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6));
+                shortUrl = BASE_URL + shortId;
+
+                // Create and save new ShortenedUrl
+                ShortenedUrl newEntry = new ShortenedUrl();
+                newEntry.setShortUrl(shortUrl);
+                newEntry.setOriginalUrl(originalUrl);
+                newEntry.setCreatedDateTime(LocalDateTime.now());
+                newEntry.setSenderAccountNumber(senderAccountNumber);
+
+                shortenedUrlRepository.save(newEntry);
+            }
+
+            // Add the response to the list
+            responses.add(new ShortUrlResponse(shortUrl));
+        }
+        return ResponseEntity.ok(responses);
     }
+
 
     @GetMapping("/{shortId}")
     public ResponseEntity<?> redirect(@PathVariable String shortId, HttpServletRequest request) {
@@ -129,31 +175,4 @@ public class UrlShortenerController {
             return "Other";
         }
     }
-
-    private String getLocationFromIp(String ipAddress) {
-        String apiUrl = "https://ip-api.com/json/" + ipAddress;
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            String response = restTemplate.getForObject(apiUrl, String.class);
-            // Parse JSON and extract location fields
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response);
-            String status = root.path("status").asText();
-            if ("success".equalsIgnoreCase(status)) {
-                String city = root.path("city").asText("");
-                String country = root.path("country").asText("");
-                String regionName = root.path("regionName").asText("");
-                return city + ", " + regionName + ", " + country;
-            } else {
-                String message = root.path("message").asText("Unknown error");
-                System.err.println("Geolocation API error: " + message);
-                return "Unknown";
-            }
-        } catch (Exception e) {
-            System.err.println("Error in getLocationFromIp: " + e.getMessage());
-            return "Unknown";
-        }
-    }
-
-
 }

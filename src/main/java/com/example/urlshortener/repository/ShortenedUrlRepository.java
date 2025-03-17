@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface ShortenedUrlRepository extends JpaRepository<ShortenedUrl, Long> {
     Optional<ShortenedUrl> findByShortUrl(String shortUrl);
-
+    Optional<ShortenedUrl> findByShortId(String shortId);
     Optional<ShortenedUrl> findByOriginalUrlAndSenderAccountNumber(String originalUrl, String senderAccountNumber);
 }
 

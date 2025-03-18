@@ -7,34 +7,38 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "url_hits")
+@Table(name = "SHORTURL_TRACKING_AUDIT")
 public class UrlHit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id") // optional, matches the column name in the database
+    @Column(name = "SERIAL_ID")
     private Long id;
 
-    @Column(name = "short_url", nullable = false)
+    @Column(name = "SHORT_URL", nullable = false, length = 100)
     private String shortUrl;
 
-    @Column(name = "time_of_hit", nullable = false)
+    @Column(name = "LSTUPDT_TS", columnDefinition = "TIMESTAMP", nullable = false)
     private LocalDateTime timeOfHit;
 
-    @Column(name = "ip_address", nullable = false)
+    @Column(name = "LSTUPDT_USER_ID_CD", nullable = false, length = 12)
+    private String cdsid;
+
+    @Column(name = "IP_ADDRESS", length = 20,nullable = false)
     private String ipAddress;
 
-    @Column(name = "browser_type")
+    @Column(name = "BROWSER_TYPE", length = 20)
     private String browserType;
 
-    @Column(name = "account_number", nullable = false)
-    private String accountNumber;
+    @Column(name = "ACCOUNT_NUMBER", nullable = false)
+    private int accountNumber;
 
     public UrlHit() {
     }
 
-    public UrlHit(String shortUrl, LocalDateTime timeOfHit, String ipAddress, String browserType, String accountNumber) {
+    public UrlHit(String shortUrl, String cdsid, LocalDateTime timeOfHit, String ipAddress, String browserType, int accountNumber) {
         this.shortUrl = shortUrl;
+        this.cdsid = cdsid;
         this.timeOfHit = timeOfHit;
         this.ipAddress = ipAddress;
         this.browserType = browserType;
@@ -42,48 +46,29 @@ public class UrlHit {
     }
 
     // Getters and Setters
-    public long getId() {
-        return id;
-    }
 
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public void setAccountNumber(String accountNumber) {
+    public void setAccountNumber(int accountNumber) {
         this.accountNumber = accountNumber;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getShortUrl() {
-        return shortUrl;
     }
 
     public void setShortUrl(String shortUrl) {
         this.shortUrl = shortUrl;
     }
 
-    public LocalDateTime getTimeOfHit() {
-        return timeOfHit;
+    public String getCdsid(){
+        return cdsid;
+    }
+
+    public void setCdsid(String cdsid){
+        this.cdsid = cdsid;
     }
 
     public void setTimeOfHit(LocalDateTime timeOfHit) {
         this.timeOfHit = timeOfHit;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
-    }
-
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
-    }
-
-    public String getBrowserType() {
-        return browserType;
     }
 
     public void setBrowserType(String browserType) {

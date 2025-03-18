@@ -6,46 +6,38 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Table(name = "shortened_urls", uniqueConstraints = @UniqueConstraint(columnNames = {"original_url", "sender_account_number"}))
+@Table(name = "SHORTENED_URLS", uniqueConstraints = @UniqueConstraint(columnNames = {"ORIGINAL_URL", "ACCOUNT_NUMBER"}))
 public class ShortenedUrl {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "primary_id")
+    @Column(name = "SERIAL_ID")
     private Long primaryId;
 
-    @Column(name = "short_url", nullable = false, unique = true)
+    @Column(name = "SHORT_URL", nullable = false, length = 100, unique = true)
     private String shortUrl;
 
-    @Column(name = "original_url", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "ORIGINAL_URL", columnDefinition = "TEXT", nullable = false)
     private String originalUrl;
 
-    @Column(name = "created_date_time", nullable = false)
+    @Column(name = "LSTUPDT_TS", columnDefinition = "TIMESTAMP", nullable = false)
     private LocalDateTime createdDateTime;
 
-    @Column(name = "sender_account_number", nullable = false)
-    private String senderAccountNumber;
+    @Column(name = "LSTUPDT_USER_ID_CD", length = 12, nullable = false)
+    private String cdsid;
 
-    // Constructors, getters, setters
+    @Column(name = "ACCOUNT_NUMBER", nullable = false)
+    private int senderAccountNumber;
 
-    // Constructors
     public ShortenedUrl() {
     }
 
-    public ShortenedUrl(long primaryId, String shortUrl, String originalUrl, LocalDateTime createdDateTime, String senderAccountNumber) {
+    public ShortenedUrl(long primaryId, String cdsid, String shortUrl, String originalUrl, LocalDateTime createdDateTime, int senderAccountNumber) {
         this.primaryId = primaryId;
         this.shortUrl = shortUrl;
+        this.cdsid = cdsid;
         this.originalUrl = originalUrl;
         this.createdDateTime = createdDateTime;
         this.senderAccountNumber = senderAccountNumber;
-    }
-
-    // Getters and Setters
-    public long getPrimaryId() {
-        return primaryId;
-    }
-
-    public void setPrimaryId(long primaryId) {
-        this.primaryId = primaryId;
     }
 
     public String getShortUrl() {
@@ -72,11 +64,19 @@ public class ShortenedUrl {
         this.createdDateTime = createdDateTime;
     }
 
-    public String getSenderAccountNumber() {
+    public int getSenderAccountNumber() {
         return senderAccountNumber;
     }
 
-    public void setSenderAccountNumber(String senderAccountNumber) {
+    public void setSenderAccountNumber(int senderAccountNumber) {
         this.senderAccountNumber = senderAccountNumber;
+    }
+
+    public void setCdsid(String cdsid) {
+        this.cdsid = cdsid;
+    }
+
+    public String getCdsid() {
+        return cdsid;
     }
 }

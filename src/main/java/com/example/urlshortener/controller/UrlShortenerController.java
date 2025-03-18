@@ -1,37 +1,73 @@
 package com.example.urlshortener.controller;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.example.urlshortener.model.OriginalUrlRequest;
 import com.example.urlshortener.model.ShortUrlResponse;
 import com.example.urlshortener.model.ShortenedUrl;
 import com.example.urlshortener.model.UrlHit;
-import com.example.urlshortener.repository.ShortenedUrlRepository;
-import com.example.urlshortener.repository.UrlHitRepository;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.urlshortener.service.UrlHitService;
+import com.example.urlshortener.service.UrlShorteningService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 
 @RestController
 @CrossOrigin("*")
 public class UrlShortenerController {
 
-    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
+    @Autowired
+    private UrlShorteningService urlShorteningService;
 
-    private static final Logger logger = LoggerFactory.getLogger(UrlShortenerController.class);
+    @Autowired
+    private UrlHitService urlHitService;
 
-//    private static final String BASE_URL = "http://your-domain.com/"; //Ensure you replace "http://your-domain.com/" with your actual domain or base URL.
+    @PostMapping("/shorten")
+    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
+        List<ShortUrlResponse> responses = urlShorteningService.shortenUrls(requests);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{shortId}")
+    public ResponseEntity<?> redirect(@PathVariable String shortId, HttpServletRequest request) {
+        Optional<ShortenedUrl> optionalEntry = urlHitService.getOriginalUrl(shortId);
+
+        if (optionalEntry.isPresent()) {
+            ShortenedUrl urlEntry = optionalEntry.get();
+
+            // Log the URL hit
+            urlHitService.logUrlHit(urlEntry, request);
+
+            return ResponseEntity.status(302)
+                    .header("Location", urlEntry.getOriginalUrl())
+                    .build();
+        } else {
+            return ResponseEntity.status(404).body("URL not found");
+        }
+    }
+
+    @GetMapping("/stats/{shortId}")
+    public ResponseEntity<?> getStats(@PathVariable String shortId) {
+        List<UrlHit> hits = urlHitService.getUrlHits(shortId);
+        return ResponseEntity.ok(hits);
+    }
+}
+
+
+/*
+@RestController
+@CrossOrigin("*")
+public class UrlShortenerController {
+
+    private static String BASE_URL;
+
+    @Autowired  // Constructor injection is recommended
+    public UrlShortenerController(@Value("${base.url}") String BASE_URL) {
+        this.BASE_URL = BASE_URL;
+    }
 
     @Autowired
     private ShortenedUrlRepository shortenedUrlRepository;
@@ -45,35 +81,6 @@ public class UrlShortenerController {
         }
         return input.replaceAll("[\n\r\t]", "");
     }
-
-    /*@PostMapping("/shorten")
-    public ResponseEntity<?> shortenUrl(@RequestBody OriginalUrlRequest request) {
-        String originalUrl = request.getOriginalUrl();
-        String senderAccountNumber = request.getSenderAccountNumber();
-
-        // Check if a matching ShortenedUrl already exists
-        Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
-
-        if (existingEntry.isPresent()) {
-            // Return existing short URL
-            return ResponseEntity.ok(new ShortUrlResponse(existingEntry.get().getShortUrl()));
-        }
-
-        // Generate new short ID
-        String shortId = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6);
-        String shortUrl = BASE_URL + shortId;
-
-        // Create and save new ShortenedUrl
-        ShortenedUrl newEntry = new ShortenedUrl();
-        newEntry.setShortUrl(shortUrl);
-        newEntry.setOriginalUrl(originalUrl);
-        newEntry.setCreatedDateTime(LocalDateTime.now());
-        newEntry.setSenderAccountNumber(senderAccountNumber);
-
-        shortenedUrlRepository.save(newEntry);
-
-        return ResponseEntity.ok(new ShortUrlResponse(shortUrl));
-    }*/
 
     @PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
@@ -176,3 +183,4 @@ public class UrlShortenerController {
         }
     }
 }
+*/

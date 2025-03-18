@@ -6,9 +6,4 @@ public class ShortUrlResponse {
     public ShortUrlResponse(String shortUrl) {
         this.shortUrl = shortUrl;
     }
-
-    // Getter
-    public String getShortUrl() {
-        return shortUrl;
-    }
 }

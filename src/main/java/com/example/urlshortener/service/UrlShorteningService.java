@@ -40,11 +40,10 @@ public class UrlShorteningService {
 
         for (OriginalUrlRequest request : requests) {
             String originalUrl = sanitizeInput(request.getOriginalUrl());
-            String senderAccountNumber = request.getSenderAccountNumber();
+            int senderAccountNumber = request.getSenderAccountNumber();
             String cdsid = request.getCdsid();
 
-            Optional<ShortenedUrl> existingEntry =
-                    shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
+            Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
 
             String shortUrl;
 
@@ -59,7 +58,7 @@ public class UrlShorteningService {
                 newEntry.setOriginalUrl(originalUrl);
                 newEntry.setCreatedDateTime(LocalDateTime.now());
                 newEntry.setCdsid(cdsid);
-                newEntry.setSenderAccountNumber(Integer.parseInt(senderAccountNumber));
+                newEntry.setSenderAccountNumber(senderAccountNumber);
 
                 shortenedUrlRepository.save(newEntry);
             }

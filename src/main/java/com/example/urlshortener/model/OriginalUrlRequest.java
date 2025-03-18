@@ -2,14 +2,14 @@ package com.example.urlshortener.model;
 
 public class OriginalUrlRequest {
     private String originalUrl;
-    private String senderAccountNumber;
+    private int senderAccountNumber;
     private String cdsid;
 
     public String getOriginalUrl() {
         return originalUrl;
     }
 
-    public String getSenderAccountNumber() {
+    public int getSenderAccountNumber() {
         return senderAccountNumber;
     }
 

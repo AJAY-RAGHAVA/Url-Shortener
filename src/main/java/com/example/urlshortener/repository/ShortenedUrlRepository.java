@@ -10,6 +10,6 @@ import java.util.Optional;
 public interface ShortenedUrlRepository extends JpaRepository<ShortenedUrl, Long> {
     Optional<ShortenedUrl> findByShortUrl(String shortUrl);
 
-    Optional<ShortenedUrl> findByOriginalUrlAndSenderAccountNumber(String originalUrl, String senderAccountNumber);
+    Optional<ShortenedUrl> findByOriginalUrlAndSenderAccountNumber(String originalUrl, int senderAccountNumber);
 }
 

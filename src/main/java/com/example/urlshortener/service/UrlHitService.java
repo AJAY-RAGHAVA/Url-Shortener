@@ -1,12 +1,10 @@
 package com.example.urlshortener.service;
 
-
 import com.example.urlshortener.model.ShortenedUrl;
 import com.example.urlshortener.model.UrlHit;
 import com.example.urlshortener.repository.ShortenedUrlRepository;
 import com.example.urlshortener.repository.UrlHitRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,10 +22,11 @@ public class UrlHitService {
     @Autowired
     private UrlHitRepository urlHitRepository;
 
-    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
+    @Value("${url.shortener.base-url}")
+    private String baseUrl;
 
     public Optional<ShortenedUrl> getOriginalUrl(String shortId) {
-        String shortUrl = BASE_URL + shortId;
+        String shortUrl = baseUrl + shortId;
         return shortenedUrlRepository.findByShortUrl(shortUrl);
     }
 
@@ -44,7 +43,7 @@ public class UrlHitService {
     }
 
     public List<UrlHit> getUrlHits(String shortId) {
-        String shortUrl = BASE_URL + shortId;
+        String shortUrl = baseUrl + shortId;
         return urlHitRepository.findByShortUrl(shortUrl);
     }
 

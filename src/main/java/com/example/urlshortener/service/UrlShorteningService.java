@@ -1,12 +1,10 @@
 package com.example.urlshortener.service;
 
-
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.example.urlshortener.model.OriginalUrlRequest;
 import com.example.urlshortener.model.ShortUrlResponse;
 import com.example.urlshortener.model.ShortenedUrl;
 import com.example.urlshortener.repository.ShortenedUrlRepository;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,8 @@ public class UrlShorteningService {
     @Autowired
     private ShortenedUrlRepository shortenedUrlRepository;
 
-    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
+    @Value("${url.shortener.base-url}")
+    private String baseUrl;
 
     public List<ShortUrlResponse> shortenUrls(List<OriginalUrlRequest> requests) {
         List<ShortUrlResponse> responses = new ArrayList<>();
@@ -32,15 +31,18 @@ public class UrlShorteningService {
             int senderAccountNumber = request.getSenderAccountNumber();
             String cdsid = request.getCdsid();
 
-            Optional<ShortenedUrl> existingEntry = shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
+            Optional<ShortenedUrl> existingEntry =
+                    shortenedUrlRepository.findByOriginalUrlAndSenderAccountNumber(originalUrl, senderAccountNumber);
 
             String shortUrl;
-
             if (existingEntry.isPresent()) {
                 shortUrl = existingEntry.get().getShortUrl();
             } else {
-                String shortId = sanitizeInput(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6));
-                shortUrl = BASE_URL + shortId;
+                String shortId = NanoIdUtils.randomNanoId(
+                        NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
+                        NanoIdUtils.DEFAULT_ALPHABET,
+                        6);
+                shortUrl = baseUrl + shortId;
 
                 ShortenedUrl newEntry = new ShortenedUrl();
                 newEntry.setShortUrl(shortUrl);
@@ -51,10 +53,8 @@ public class UrlShorteningService {
 
                 shortenedUrlRepository.save(newEntry);
             }
-
             responses.add(new ShortUrlResponse(shortUrl));
         }
-
         return responses;
     }
 
@@ -65,4 +65,3 @@ public class UrlShorteningService {
         return input.replaceAll("[\n\r\t]", "");
     }
 }
-

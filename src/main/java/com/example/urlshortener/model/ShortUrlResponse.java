@@ -2,17 +2,19 @@ package com.example.urlshortener.model;
 
 public class ShortUrlResponse {
     private String shortUrl;
-    private String originalUrl;
+
+    public ShortUrlResponse() {
+    }
+
+    public ShortUrlResponse(String shortUrl) {
+        this.shortUrl = shortUrl;
+    }
 
     public String getShortUrl() {
         return shortUrl;
     }
 
-    public String getOriginalUrl() {
-        return originalUrl;
-    }
-
-    public ShortUrlResponse(String shortUrl) {
+    public void setShortUrl(String shortUrl) {
         this.shortUrl = shortUrl;
     }
 }

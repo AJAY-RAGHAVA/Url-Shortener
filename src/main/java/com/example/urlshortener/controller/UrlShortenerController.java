@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,31 +27,21 @@ public class UrlShortenerController {
 
     @PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
-        // Call the service method with the list of requests.
         List<ShortUrlResponse> responses = urlShorteningService.shortenUrls(requests);
-
-        // Optionally, if there's only one response, return just that object instead of a list.
+        // Optional: If only one element exists, you can return directly that object.
         if (responses.size() == 1) {
             return ResponseEntity.ok(responses.get(0));
         }
         return ResponseEntity.ok(responses);
     }
-    /*@PostMapping("/shorten")
-    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
-        List<ShortUrlResponse> responses = urlShorteningService.shortenUrls(requests);
-        return ResponseEntity.ok(responses);
-    }*/
 
     @GetMapping("/{shortId}")
     public ResponseEntity<?> redirect(@PathVariable String shortId, HttpServletRequest request) {
         Optional<ShortenedUrl> optionalEntry = urlHitService.getOriginalUrl(shortId);
-
         if (optionalEntry.isPresent()) {
             ShortenedUrl urlEntry = optionalEntry.get();
-
-            // Log the URL hit
+            // Log URL hit
             urlHitService.logUrlHit(urlEntry, request);
-
             return ResponseEntity.status(302)
                     .header("Location", urlEntry.getOriginalUrl())
                     .build();

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,9 +28,20 @@ public class UrlShortenerController {
 
     @PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
+        // Call the service method with the list of requests.
         List<ShortUrlResponse> responses = urlShorteningService.shortenUrls(requests);
+
+        // Optionally, if there's only one response, return just that object instead of a list.
+        if (responses.size() == 1) {
+            return ResponseEntity.ok(responses.get(0));
+        }
         return ResponseEntity.ok(responses);
     }
+    /*@PostMapping("/shorten")
+    public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {
+        List<ShortUrlResponse> responses = urlShorteningService.shortenUrls(requests);
+        return ResponseEntity.ok(responses);
+    }*/
 
     @GetMapping("/{shortId}")
     public ResponseEntity<?> redirect(@PathVariable String shortId, HttpServletRequest request) {

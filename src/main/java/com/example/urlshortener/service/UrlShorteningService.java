@@ -22,21 +22,10 @@ public class UrlShorteningService {
     @Autowired
     private ShortenedUrlRepository shortenedUrlRepository;
 
-//    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
-
-    private static String BASE_URL;
-
-    private Logger logger;
-
-    @Autowired  // Constructor injection is recommended
-    public UrlShorteningService(@Value("${base.url}") String BASE_URL) {
-        this.BASE_URL = BASE_URL;
-    }
+    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
 
     public List<ShortUrlResponse> shortenUrls(List<OriginalUrlRequest> requests) {
         List<ShortUrlResponse> responses = new ArrayList<>();
-
-        logger.info("The base url is: {}", BASE_URL);
 
         for (OriginalUrlRequest request : requests) {
             String originalUrl = sanitizeInput(request.getOriginalUrl());
@@ -50,7 +39,7 @@ public class UrlShorteningService {
             if (existingEntry.isPresent()) {
                 shortUrl = existingEntry.get().getShortUrl();
             } else {
-                String shortId = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6);
+                String shortId = sanitizeInput(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 6));
                 shortUrl = BASE_URL + shortId;
 
                 ShortenedUrl newEntry = new ShortenedUrl();

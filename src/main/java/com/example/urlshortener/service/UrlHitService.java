@@ -24,17 +24,9 @@ public class UrlHitService {
     @Autowired
     private UrlHitRepository urlHitRepository;
 
-//    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
-    private static String BASE_URL;
-    private Logger logger;
-
-    @Autowired
-    public UrlHitService(@Value("${base.url}") String BASE_URL) {
-        this.BASE_URL = BASE_URL;
-    }
+    private static final String BASE_URL = "https://url-shortener-3vc2dqspzq-el.a.run.app/";
 
     public Optional<ShortenedUrl> getOriginalUrl(String shortId) {
-        logger.info("The base url is: {}", BASE_URL);
         String shortUrl = BASE_URL + shortId;
         return shortenedUrlRepository.findByShortUrl(shortUrl);
     }
@@ -46,6 +38,7 @@ public class UrlHitService {
         hit.setIpAddress(getClientIpAddress(request));
         hit.setBrowserType(getBrowserTypeFromUserAgent(request.getHeader("User-Agent")));
         hit.setAccountNumber(urlEntry.getSenderAccountNumber());
+        hit.setCdsid(urlEntry.getCdsid());
 
         urlHitRepository.save(hit);
     }

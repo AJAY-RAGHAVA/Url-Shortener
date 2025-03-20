@@ -2,8 +2,8 @@ package com.example.urlshortener.controller;
 
 import com.example.urlshortener.model.OriginalUrlRequest;
 import com.example.urlshortener.model.ShortUrlResponse;
-import com.example.urlshortener.model.ShortenedUrl;
-import com.example.urlshortener.model.UrlHit;
+import com.example.urlshortener.entity.ShortenedUrl;
+import com.example.urlshortener.entity.UrlHit;
 import com.example.urlshortener.service.UrlHitService;
 import com.example.urlshortener.service.UrlShorteningService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,11 +19,14 @@ import java.util.Optional;
 @CrossOrigin("*")
 public class UrlShortenerController {
 
-    @Autowired
-    private UrlShorteningService urlShorteningService;
+    private final UrlShorteningService urlShorteningService;
 
-    @Autowired
-    private UrlHitService urlHitService;
+    private final UrlHitService urlHitService;
+
+    public UrlShortenerController(UrlShorteningService urlShorteningService, UrlHitService urlHitService) {
+        this.urlShorteningService = urlShorteningService;
+        this.urlHitService = urlHitService;
+    }
 
     @PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody List<OriginalUrlRequest> requests) {

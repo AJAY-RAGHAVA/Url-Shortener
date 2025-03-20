@@ -3,9 +3,8 @@ package com.example.urlshortener.service;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.example.urlshortener.model.OriginalUrlRequest;
 import com.example.urlshortener.model.ShortUrlResponse;
-import com.example.urlshortener.model.ShortenedUrl;
+import com.example.urlshortener.entity.ShortenedUrl;
 import com.example.urlshortener.repository.ShortenedUrlRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +16,14 @@ import java.util.Optional;
 @Service
 public class UrlShorteningService {
 
-    @Autowired
-    private ShortenedUrlRepository shortenedUrlRepository;
+    private final ShortenedUrlRepository shortenedUrlRepository;
 
     @Value("${url.shortener.base-url}")
     private String baseUrl;
+
+    public UrlShorteningService(ShortenedUrlRepository shortenedUrlRepository) {
+        this.shortenedUrlRepository = shortenedUrlRepository;
+    }
 
     public List<ShortUrlResponse> shortenUrls(List<OriginalUrlRequest> requests) {
         List<ShortUrlResponse> responses = new ArrayList<>();

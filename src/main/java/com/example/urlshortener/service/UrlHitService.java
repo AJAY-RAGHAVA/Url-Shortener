@@ -1,11 +1,10 @@
 package com.example.urlshortener.service;
 
-import com.example.urlshortener.model.ShortenedUrl;
-import com.example.urlshortener.model.UrlHit;
+import com.example.urlshortener.entity.ShortenedUrl;
+import com.example.urlshortener.entity.UrlHit;
 import com.example.urlshortener.repository.ShortenedUrlRepository;
 import com.example.urlshortener.repository.UrlHitRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +15,17 @@ import java.util.Optional;
 @Service
 public class UrlHitService {
 
-    @Autowired
-    private ShortenedUrlRepository shortenedUrlRepository;
+    private final ShortenedUrlRepository shortenedUrlRepository;
 
-    @Autowired
-    private UrlHitRepository urlHitRepository;
+    private final UrlHitRepository urlHitRepository;
 
     @Value("${url.shortener.base-url}")
     private String baseUrl;
+
+    public UrlHitService(ShortenedUrlRepository shortenedUrlRepository, UrlHitRepository urlHitRepository) {
+        this.shortenedUrlRepository = shortenedUrlRepository;
+        this.urlHitRepository = urlHitRepository;
+    }
 
     public Optional<ShortenedUrl> getOriginalUrl(String shortId) {
         String shortUrl = baseUrl + shortId;

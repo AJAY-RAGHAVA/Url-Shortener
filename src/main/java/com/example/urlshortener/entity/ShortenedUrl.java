@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "SHORTENED_URLS", uniqueConstraints = @UniqueConstraint(columnNames = {"ORIGINAL_URL", "ACCOUNT_NUMBER"}))
+@Table(name = "TRACING_SHORTENED_URLS", uniqueConstraints = @UniqueConstraint(columnNames = {"ORIGINAL_URL", "ACCOUNT_NUMBER"}))
 public class ShortenedUrl {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
